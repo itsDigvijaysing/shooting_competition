@@ -103,6 +103,14 @@ frontend
   - Participants are divided into details (e.g., Detail 1, Detail 2) based on lane availability.
   - Each detail has specific timing information.
 
+- **Ensure everything is working by running these tests**
+
+- GET /api/participants/: Should return all participants.
+- POST /api/participants/add: Add a participant with valid data.
+- PUT /api/participants/update/{id}: Update a participant's details.
+- DELETE /api/participants/delete/{id}: Delete a participant.
+- POST /api/login: Test login with valid credentials.
+
 ## License
 
 This project is licensed under the MIT License. See the LICENSE file for details.

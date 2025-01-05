@@ -6,7 +6,16 @@ const bodyParser = require("body-parser");
 const dotenv = require("dotenv");
 const participantRoutes = require("./routes/participant");
 const loginRoutes = require("./routes/login");
+const errorHandler = require("./middleware/errorMiddleware");
 
+// Not Required Now
+// const corsOptions = {
+//   origin: "http://localhost:3000", // Your frontend URL
+//   methods: ["GET", "POST", "PUT", "DELETE"],
+//   allowedHeaders: ["Content-Type", "Authorization"]
+// };
+
+// app.use(cors(corsOptions));
 
 dotenv.config();
 require("dotenv").config();
@@ -18,15 +27,15 @@ const PORT = process.env.PORT || 5000;
 app.use(cors());
 app.use(bodyParser.json());
 app.use("/api/login", loginRoutes);
-
-
-// Routes
 app.use("/api/participants", participantRoutes);
 
 // Root route
 app.get("/", (req, res) => {
   res.send("Shooting Competition Backend is Running!");
 });
+
+// Error handling middleware
+app.use(errorHandler);
 
 // Start the server
 app.listen(PORT, () => {
