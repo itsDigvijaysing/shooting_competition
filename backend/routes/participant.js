@@ -1,7 +1,8 @@
 const express = require("express");
 const authenticateUser = require("../middleware/auth");
 const db = require("../config/db");
-
+const jwt = require('jsonwebtoken');
+const env = require('../.env');
 const router = express.Router();
 
 
@@ -35,9 +36,17 @@ router.post("/add", authenticateUser, (req, res) => {
   
   
 
-router.post("/login", (req, res) => {
-  res.status(200).send({ message: "Login successful", token: req.token });
-});
+  router.post("/login", (req, res) => {
+    const { username, password } = req.body; // Ensure you're getting the credentials
+    // Verify username and password here (add your authentication logic)
+  
+    const user = { username };  // Create a user object after validating the credentials
+  
+    // Generate a JWT token
+    const token = jwt.sign(user, env.JWT_SECRET, { expiresIn: '1h' });
+  
+    res.status(200).send({ message: "Login successful", token: token });
+  });
 
 // participant.js
 router.get("/", authenticateUser, (req, res) => {

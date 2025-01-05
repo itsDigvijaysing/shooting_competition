@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { addParticipant } from "../services/api";
+import { addParticipant } from "../services/api"; // Correct import
 
 const ParticipantForm = () => {
   const [formData, setFormData] = useState({
@@ -33,7 +33,7 @@ const ParticipantForm = () => {
         lane_no: "",
       });
     } catch (error) {
-      setMessage(error.message);
+      setMessage("Error in registration. Please try again.");
     }
   };
 

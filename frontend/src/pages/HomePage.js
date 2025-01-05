@@ -6,7 +6,7 @@ const HomePage = () => {
   const [sections, setSections] = useState([]);
 
   const handleAddSection = (sectionData) => {
-    setSections([...sections, sectionData]);
+    setSections((prevSections) => [...prevSections, sectionData]);
   };
 
   return (

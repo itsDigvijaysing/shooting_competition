@@ -3,21 +3,57 @@ import { BrowserRouter as Router, Routes, Route, Link, Navigate } from "react-ro
 import HomePage from "./pages/HomePage";
 import ResultsPage from "./pages/ResultsPage";
 import LoginForm from "./components/LoginForm";
+import './App.css';
 
 function App() {
   const [role, setRole] = useState(() => localStorage.getItem("role"));
+  const [token, setToken] = useState(() => localStorage.getItem("token"));
 
   useEffect(() => {
     localStorage.setItem("role", role);
-  }, [role]);
+    localStorage.setItem("token", token);
+  }, [role, token]);
+
+  useEffect(() => {
+    const validateSession = async () => {
+      if (role && token) {
+        try {
+          const response = await fetch("/api/validate-session", {
+            headers: { Authorization: `Bearer ${token}` },
+          });
+          if (!response.ok) {
+            localStorage.removeItem("role");
+            localStorage.removeItem("token");
+            setRole(null);
+            setToken(null);
+          }
+        } catch {
+          localStorage.removeItem("role");
+          localStorage.removeItem("token");
+          setRole(null);
+          setToken(null);
+        }
+      }
+    };
+    validateSession();
+  }, [role, token]);
 
   return (
     <Router>
       <nav>
-        {role ? (
+        {role && token ? (
           <>
             <Link to={role === "supervisor" ? "/home" : "/results"}>Dashboard</Link> |{" "}
-            <button onClick={() => setRole(null)}>Logout</button>
+            <button
+              onClick={() => {
+                localStorage.removeItem("role");
+                localStorage.removeItem("token");
+                setRole(null);
+                setToken(null);
+              }}
+            >
+              Logout
+            </button>
           </>
         ) : (
           <Link to="/login">Login</Link>
@@ -25,15 +61,19 @@ function App() {
       </nav>
 
       <Routes>
-        <Route path="/login" element={<LoginForm onLogin={setRole} />} />
+        <Route
+          path="/login"
+          element={<LoginForm onLogin={(role, token) => { setRole(role); setToken(token); }} />}
+        />
         <Route
           path="/home"
-          element={
-            role === "supervisor" ? <HomePage /> : <Navigate to="/login" replace />
-          }
+          element={role === "supervisor" && token ? <HomePage /> : <Navigate to="/login" replace />}
         />
-        <Route path="/results" element={<ResultsPage />} />
-        <Route path="*" element={<Navigate to={role ? "/home" : "/login"} replace />} />
+        <Route
+          path="/results"
+          element={role && token ? <ResultsPage /> : <Navigate to="/login" replace />}
+        />
+        <Route path="*" element={<Navigate to={role && token ? "/home" : "/login"} replace />} />
       </Routes>
     </Router>
   );
