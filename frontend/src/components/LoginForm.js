@@ -8,6 +8,20 @@ const LoginForm = ({ onLogin }) => {
   const [errorMessage, setErrorMessage] = useState("");
   const navigate = useNavigate();
 
+  // Temp Mock login function
+  // const handleSubmit = async (e) => {
+  //   e.preventDefault();
+  //   try {
+  //     // Mock login response (you can change the role as needed)
+  //     const mockUser = { role: "supervisor" };
+  //     onLogin(mockUser.role); // Set user role
+  //     navigate(mockUser.role === "supervisor" ? "/home" : "/results"); // Redirect based on role
+  //   } catch (error) {
+  //     setErrorMessage("Invalid credentials. Please try again.");
+  //   }
+  // };
+
+  //Actual login function
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {

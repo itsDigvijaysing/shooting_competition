@@ -11,7 +11,7 @@ const ResultsPage = () => {
     const fetchParticipants = async () => {
       try {
         const data = await getParticipants();
-        setParticipants(data);
+        setParticipants(data || []); // Ensure participants is an array
       } catch (error) {
         console.error("Error fetching participants:", error.message);
       }
@@ -23,7 +23,7 @@ const ResultsPage = () => {
   // Filter participants based on search term or age
   const filteredParticipants = participants.filter((participant) => {
     const matchesSearch =
-      participant.name.toLowerCase().includes(searchTerm.toLowerCase());
+      participant.name?.toLowerCase().includes(searchTerm.toLowerCase());
     const matchesAge = filterAge ? participant.age === parseInt(filterAge) : true;
     return matchesSearch && matchesAge;
   });
@@ -41,10 +41,8 @@ const ResultsPage = () => {
       }
       return b.ten_pointers - a.ten_pointers; // Compare 10-pointers
     });
-  
     return participants;
   };
-  
 
   return (
     <div>
@@ -86,14 +84,14 @@ const ResultsPage = () => {
           {filteredParticipants.length > 0 ? (
             filteredParticipants.map((participant) => (
               <tr key={participant.id}>
-                <td>{participant.name}</td>
-                <td>{participant.zone}</td>
-                <td>{participant.event}</td>
-                <td>{participant.school_name}</td>
-                <td>{participant.age}</td>
-                <td>{participant.gender}</td>
-                <td>{participant.lane_no}</td>
-                <td>{participant.total_score}</td>
+                <td>{participant.name || "N/A"}</td>
+                <td>{participant.zone || "N/A"}</td>
+                <td>{participant.event || "N/A"}</td>
+                <td>{participant.school_name || "N/A"}</td>
+                <td>{participant.age || "N/A"}</td>
+                <td>{participant.gender || "N/A"}</td>
+                <td>{participant.lane_no || "N/A"}</td>
+                <td>{participant.total_score || 0}</td>
               </tr>
             ))
           ) : (
