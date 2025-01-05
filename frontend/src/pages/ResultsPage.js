@@ -7,11 +7,10 @@ const ResultsPage = () => {
   const [filterAge, setFilterAge] = useState("");
 
   useEffect(() => {
-    // Fetch participants from the backend
     const fetchParticipants = async () => {
       try {
         const data = await getParticipants();
-        setParticipants(data || []); // Ensure participants is an array
+        setParticipants(data || []);
       } catch (error) {
         console.error("Error fetching participants:", error.message);
       }
@@ -20,7 +19,6 @@ const ResultsPage = () => {
     fetchParticipants();
   }, []);
 
-  // Filter participants based on search term or age
   const filteredParticipants = participants.filter((participant) => {
     const matchesSearch =
       participant.name?.toLowerCase().includes(searchTerm.toLowerCase());
@@ -31,15 +29,15 @@ const ResultsPage = () => {
   const calculateRankings = (participants) => {
     participants.sort((a, b) => {
       if (b.total_score !== a.total_score) {
-        return b.total_score - a.total_score; // Compare total scores
+        return b.total_score - a.total_score;
       }
       if (b.last_series_score !== a.last_series_score) {
-        return b.last_series_score - a.last_series_score; // Compare last series
+        return b.last_series_score - a.last_series_score;
       }
       if (b.first_series_score !== a.first_series_score) {
-        return b.first_series_score - a.first_series_score; // Compare first series
+        return b.first_series_score - a.first_series_score;
       }
-      return b.ten_pointers - a.ten_pointers; // Compare 10-pointers
+      return b.ten_pointers - a.ten_pointers;
     });
     return participants;
   };
@@ -82,7 +80,7 @@ const ResultsPage = () => {
         </thead>
         <tbody>
           {filteredParticipants.length > 0 ? (
-            filteredParticipants.map((participant) => (
+            calculateRankings(filteredParticipants).map((participant) => (
               <tr key={participant.id}>
                 <td>{participant.name || "N/A"}</td>
                 <td>{participant.zone || "N/A"}</td>
