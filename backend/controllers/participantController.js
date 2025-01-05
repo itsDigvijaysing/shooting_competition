@@ -1,3 +1,5 @@
+// controllers/participantController.js
+
 const db = require("../config/db");
 
 // Add a participant
@@ -39,6 +41,5 @@ const getParticipants = (req, res) => {
     }
   });
 };
-
 
 module.exports = { addParticipant, getParticipants };
