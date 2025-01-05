@@ -1,70 +1,108 @@
-# Getting Started with Create React App
+# Shooting Competition Application
 
-This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
+This application is designed for managing shooting competitions, specifically for events like Air Pistol (AP), Peep Site (PS), and Open Site (OS). It allows participants to register, manage their scores, and view results.
 
-## Available Scripts
+## Table of Contents
 
-In the project directory, you can run:
+- [Features](#features)
+- [Installation](#installation)
+  - [Backend Setup](#backend-setup)
+  - [Frontend Setup](#frontend-setup)
+- [Usage](#usage)
+- [API Endpoints](#api-endpoints)
+  - [Participant Routes](#participant-routes)
+  - [Login Route](#login-route)
+- [Important Information](#important-information)
+- [License](#license)
 
-### `npm start`
+## Features
 
-Runs the app in the development mode.\
-Open [http://localhost:3000](http://localhost:3000) to view it in your browser.
+- Participant registration with details like name, zone, event, school name, age, gender, and lane number.
+- Management of shooting series and scores.
+- Filtering and searching participants.
+- Ranking participants based on their scores and specific criteria.
+- Timing and section management for shooting details.
 
-The page will reload when you make changes.\
-You may also see any lint errors in the console.
+## Installation
 
-### `npm test`
+### Backend Setup
 
-Launches the test runner in the interactive watch mode.\
-See the section about [running tests](https://facebook.github.io/create-react-app/docs/running-tests) for more information.
+1. Navigate to the `backend` directory:
+   ```sh
+   cd backend
+   ```
 
-### `npm run build`
+2. Install the dependencies:
+   ```sh
+   npm install
+   ```
 
-Builds the app for production to the `build` folder.\
-It correctly bundles React in production mode and optimizes the build for the best performance.
+3. Create a `.env` file in the 
 
-The build is minified and the filenames include the hashes.\
-Your app is ready to be deployed!
+backend
 
-See the section about [deployment](https://facebook.github.io/create-react-app/docs/deployment) for more information.
+ directory with the following content:
+   ```env
+   DB_HOST=localhost
+   DB_USER=root
+   DB_PASSWORD=yourpassword
+   DB_NAME=shooting_competition
+   ```
 
-### `npm run eject`
+4. Start the backend server:
+   ```sh
+   npm start
+   ```
 
-**Note: this is a one-way operation. Once you `eject`, you can't go back!**
+### Frontend Setup
 
-If you aren't satisfied with the build tool and configuration choices, you can `eject` at any time. This command will remove the single build dependency from your project.
+1. Navigate to the 
 
-Instead, it will copy all the configuration files and the transitive dependencies (webpack, Babel, ESLint, etc) right into your project so you have full control over them. All of the commands except `eject` will still work, but they will point to the copied scripts so you can tweak them. At this point you're on your own.
+frontend
 
-You don't have to ever use `eject`. The curated feature set is suitable for small and middle deployments, and you shouldn't feel obligated to use this feature. However we understand that this tool wouldn't be useful if you couldn't customize it when you are ready for it.
+ directory:
+   ```sh
+   cd frontend
+   ```
 
-## Learn More
+2. Install the dependencies:
+   ```sh
+   npm install
+   ```
 
-You can learn more in the [Create React App documentation](https://facebook.github.io/create-react-app/docs/getting-started).
+3. Start the frontend development server:
+   ```sh
+   npm start
+   ```
 
-To learn React, check out the [React documentation](https://reactjs.org/).
+## Usage
 
-### Code Splitting
+1. Open your browser and navigate to `http://localhost:3000` to access the frontend application.
+2. Use the login form to log in. Based on the user role, you will be redirected to the appropriate dashboard.
+3. Register participants, manage their scores, and view results.
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/code-splitting](https://facebook.github.io/create-react-app/docs/code-splitting)
+## API Endpoints
 
-### Analyzing the Bundle Size
+### Participant Routes
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size](https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size)
+- `POST /api/participants/add` - Add a new participant.
+- `GET /api/participants` - Get all participants.
 
-### Making a Progressive Web App
+### Login Route
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app](https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app)
+- `POST /api/login` - Login a user.
 
-### Advanced Configuration
+## Important Information
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/advanced-configuration](https://facebook.github.io/create-react-app/docs/advanced-configuration)
+- **Ranking Criteria**:
+  - When the total scores of participants are the same, the last series score is compared.
+  - If the last series scores are also the same, the first series score is compared.
+  - If both the last and first series scores are the same, the number of 10-pointers scored is used to rank the participants.
 
-### Deployment
+- **Details and Timing**:
+  - Participants are divided into details (e.g., Detail 1, Detail 2) based on lane availability.
+  - Each detail has specific timing information.
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/deployment](https://facebook.github.io/create-react-app/docs/deployment)
+## License
 
-### `npm run build` fails to minify
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify](https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify)
+This project is licensed under the MIT License. See the LICENSE file for details.
