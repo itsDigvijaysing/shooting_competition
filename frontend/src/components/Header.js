@@ -1,3 +1,4 @@
+// src/components/Header.js
 import React from "react";
 import { Link } from "react-router-dom";
 import './Header.css'; // Add any styles for the header here
@@ -9,7 +10,9 @@ const Header = ({ isLoggedIn, onLogout }) => {
       <div className="header-links">
         {isLoggedIn ? (
           <>
-            <Link to="/register">Dashboard</Link>
+            <Link to="/">Home</Link> {/* Link to Home */}
+            <Link to="/register">Register</Link> {/* Link to Register (Dashboard) */}
+            <Link to="/results">Results</Link> {/* Link to Results */}
             <button onClick={onLogout}>Logout</button>
           </>
         ) : (
