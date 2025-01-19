@@ -1,16 +1,16 @@
-const mysql = require("mysql");
+require('dotenv').config();
+const express = require('express');
+const db = require('./config/db');
+const app = express();
+const port = process.env.PORT || 5000;
 
-const db = mysql.createConnection({
-  host: "localhost",
-  user: "root", // your MySQL username
-  password: "", // your MySQL password
-  database: "shooting_competition", // name of the database you created
-});
+// Middleware
+app.use(express.json());
 
-db.connect((err) => {
-  if (err) {
-    console.error("Error connecting to the database: " + err.stack);
-    return;
-  }
-  console.log("Connected to the database as ID " + db.threadId);
+// Routes
+app.use('/api/participants', require('./routes/participant'));
+
+// Start server
+app.listen(port, () => {
+  console.log(`Server running on port ${port}`);
 });

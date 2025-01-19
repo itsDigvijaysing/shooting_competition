@@ -1,14 +1,11 @@
 const express = require("express");
-const authenticateUser = require("../middleware/auth");
+const { authenticateUser } = require("../middleware/auth");
 const db = require("../config/db");
 const jwt = require('jsonwebtoken');
-const env = require('../.env');
 const router = express.Router();
-
+require('dotenv').config();
 
 // Route to add a participant (authentication required)
-// POST route for adding a new participant
-// Authentication required
 router.post("/add", authenticateUser, (req, res) => {
     // Destructure input fields
     const { name, zone, event, school_name, age, gender, lane_no } = req.body;
@@ -31,24 +28,33 @@ router.post("/add", authenticateUser, (req, res) => {
       }
       res.status(200).send({ message: "Participant added successfully" });
     });
-  });
-  
-  
-  
+});
 
-  router.post("/login", (req, res) => {
+// Route to login (generate JWT token)
+router.post("/login", (req, res) => {
     const { username, password } = req.body; // Ensure you're getting the credentials
-    // Verify username and password here (add your authentication logic)
   
-    const user = { username };  // Create a user object after validating the credentials
-  
-    // Generate a JWT token
-    const token = jwt.sign(user, env.JWT_SECRET, { expiresIn: '1h' });
-  
-    res.status(200).send({ message: "Login successful", token: token });
-  });
+    // Query the database to find the user by username
+    const query = "SELECT * FROM users WHERE username = ?";
+    db.query(query, [username], (err, results) => {
+        if (err) {
+            return res.status(500).send({ message: "Database error", error: err });
+        }
 
-// participant.js
+        if (results.length === 0 || results[0].password !== password) {
+            return res.status(401).send({ message: "Invalid credentials" });
+        }
+
+        const user = { username };  // Create a user object after validating the credentials
+  
+        // Generate a JWT token
+        const token = jwt.sign(user, process.env.JWT_SECRET, { expiresIn: '1h' });
+  
+        res.status(200).send({ message: "Login successful", token: token });
+    });
+});
+
+// Route to get all participants (authentication required)
 router.get("/", authenticateUser, (req, res) => {
     const query = "SELECT * FROM participants";
   
@@ -61,8 +67,7 @@ router.get("/", authenticateUser, (req, res) => {
       }
       res.status(200).send(result);
     });
-  });
-  
+});
 
 // Route to update a participant's information (authentication required)
 router.put("/update/:id", authenticateUser, (req, res) => {
@@ -89,9 +94,9 @@ router.put("/update/:id", authenticateUser, (req, res) => {
       }
       res.status(200).send({ message: "Participant updated successfully" });
     });
-  });
+});
   
-  // participant.js
+// Route to delete a participant (authentication required)
 router.delete("/delete/:id", authenticateUser, (req, res) => {
     const { id } = req.params;
   
@@ -106,9 +111,6 @@ router.delete("/delete/:id", authenticateUser, (req, res) => {
       }
       res.status(200).send({ message: "Participant deleted successfully" });
     });
-  });
+});
 
-  
-  
-  
-  module.exports = router;
+module.exports = router;

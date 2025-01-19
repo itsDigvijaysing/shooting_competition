@@ -1,54 +1,55 @@
 import React, { useState } from "react";
 import { loginUser } from "../services/api";
+import { useNavigate } from "react-router-dom";
+import "./LoginForm.css";
 
 const LoginForm = ({ onLogin }) => {
-  const [username, setUsername] = useState("");
-  const [password, setPassword] = useState("");
+  const [formData, setFormData] = useState({ username: "", password: "" });
   const [errorMessage, setErrorMessage] = useState("");
+  const navigate = useNavigate();
+
+  const handleChange = (e) => {
+    setFormData({ ...formData, [e.target.name]: e.target.value });
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      const { token, role } = await loginUser(username, password);
-      console.log('Main Token role', token, role); // Debugging
-      if (token && role) {
-        onLogin(role, token); // Trigger navigation here
-        window.location.href = "/dashboard"; // Ensure navigation happens
-      } else {
-        throw new Error("Invalid credentials.");
-      }
+      const response = await loginUser(formData.username, formData.password);
+      onLogin(response.role, response.token);
+      navigate("/home"); // Redirect to dashboard
     } catch (error) {
-      console.error(error); // Debugging
-      setErrorMessage("Login failed. Please check your credentials.");
+      setErrorMessage(error.message || "Invalid credentials. Please try again.");
     }
   };
-  
 
   return (
-    <div>
+    <div className="login-container">
       <h2>Login</h2>
       <form onSubmit={handleSubmit}>
-        <div className="input-group">
-          <label>Username</label>
+        <label>
+          Username:
           <input
             type="text"
-            value={username}
-            onChange={(e) => setUsername(e.target.value)}
+            name="username"
+            value={formData.username}
+            onChange={handleChange}
             required
           />
-        </div>
-        <div className="input-group">
-          <label>Password</label>
+        </label>
+        <label>
+          Password:
           <input
             type="password"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
+            name="password"
+            value={formData.password}
+            onChange={handleChange}
             required
           />
-        </div>
+        </label>
         <button type="submit">Login</button>
       </form>
-      {errorMessage && <div>{errorMessage}</div>}
+      {errorMessage && <p className="error-message">{errorMessage}</p>}
     </div>
   );
 };

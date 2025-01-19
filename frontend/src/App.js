@@ -40,25 +40,28 @@ function App() {
 
   return (
     <Router>
-      <nav>
-        {role && token ? (
-          <>
-            <Link to={role === "supervisor" ? "/home" : "/results"}>Dashboard</Link> |{" "}
-            <button
-              onClick={() => {
-                localStorage.removeItem("role");
-                localStorage.removeItem("token");
-                setRole(null);
-                setToken(null);
-              }}
-            >
-              Logout
-            </button>
-          </>
-        ) : (
-          <Link to="/login">Login</Link>
-        )}
-      </nav>
+      <header className="app-header">
+        <div className="app-title">Shooting Competition</div>
+        <nav>
+          {role && token ? (
+            <>
+              <Link to="/home">Dashboard</Link>
+              <button
+                onClick={() => {
+                  localStorage.removeItem("role");
+                  localStorage.removeItem("token");
+                  setRole(null);
+                  setToken(null);
+                }}
+              >
+                Logout
+              </button>
+            </>
+          ) : (
+            <Link to="/login">Login</Link>
+          )}
+        </nav>
+      </header>
 
       <Routes>
         <Route
