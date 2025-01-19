@@ -1,8 +1,12 @@
 require('dotenv').config();
 const express = require('express');
+const cors = require('cors');
 const db = require('./config/db');
 const app = express();
 const port = process.env.PORT || 5000;
+
+// Enable CORS for all routes
+app.use(cors());
 
 // Middleware
 app.use(express.json());

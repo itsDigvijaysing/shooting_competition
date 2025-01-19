@@ -41,4 +41,27 @@
   .header nav ul li a:hover {
     text-decoration: underline;
   }
+  .app-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px;
+    background-color: #282c34;
+    color: white;
+  }
+  
+  .header-links a, .header-links button {
+    color: white;
+    text-decoration: none;
+    margin: 0 10px;
+    font-size: 16px;
+    padding: 5px 10px;
+    background-color: #4CAF50;
+    border: none;
+    cursor: pointer;
+  }
+  
+  .header-links button:hover, .header-links a:hover {
+    background-color: #45a049;
+  }
   

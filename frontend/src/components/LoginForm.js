@@ -17,7 +17,7 @@ const LoginForm = ({ onLogin }) => {
     try {
       const response = await loginUser(formData.username, formData.password);
       onLogin(response.role, response.token);
-      navigate("/home"); // Redirect to dashboard
+      navigate("/register"); // Redirect to dashboard
     } catch (error) {
       setErrorMessage(error.message || "Invalid credentials. Please try again.");
     }

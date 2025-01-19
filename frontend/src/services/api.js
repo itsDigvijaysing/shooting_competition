@@ -58,11 +58,21 @@ export const getSeriesScores = async (participantId) => {
 // Login user
 export const loginUser = async (username, password) => {
   try {
-    const response = await axios.post(`${API_URL}/login`, { username, password });
-    const token = response.data.token;
-    localStorage.setItem("token", token); // Store token in localStorage
-    return response.data;
+    console.log("Attempting login with", username, password);
+    const response = await axios.post(`${API_URL}/participants/login`, { username, password });
+    console.log("Login response:", response.data);
+
+    if (response.data.token) {
+      const token = response.data.token;
+      localStorage.setItem("token", token); // Store token in localStorage
+      console.log("Login successful. Token stored.");
+      return response.data;
+    } else {
+      console.error("No token received from server.");
+      throw new Error("Login failed. No token received.");
+    }
   } catch (error) {
+    console.error("Login failed:", error.response?.data?.message || error.message);
     throw new Error(error.response?.data?.message || "Login failed");
   }
 };
