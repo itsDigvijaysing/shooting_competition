@@ -1,12 +1,20 @@
 import React, { useState, useEffect } from "react";
 import { getParticipants } from "../services/api";
 
+
 const ResultsPage = () => {
   const [participants, setParticipants] = useState([]);
   const [searchTerm, setSearchTerm] = useState("");
   const [filterAge, setFilterAge] = useState("");
 
   useEffect(() => {
+    const token = localStorage.getItem("token");
+    console.log("Token in localStorage:", token);  // Check the token in the console
+    // if (!token) {
+    //   setError("No token found in localStorage.");
+    //   return;
+    // }
+
     const fetchParticipants = async () => {
       try {
         const data = await getParticipants();
