@@ -15,7 +15,7 @@ const login = (req, res) => {
     const user = results[0];
 
     // Generate a token
-    const token = jwt.sign({ id: user.id, role: user.role }, "your_secret_key", { expiresIn: "1h" });
+    const token = jwt.sign({ id: user.id, role: user.role }, process.env.JWT_SECRET, { expiresIn: "1h" });
 
     console.log('Login successful');
     res.status(200).send({ message: "Login successful", role: user.role, token });
