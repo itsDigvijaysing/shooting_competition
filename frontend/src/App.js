@@ -19,40 +19,46 @@ const App = () => {
     }
   }, []);
 
-  const handleLogin = (token) => {
+  const handleLogin = (role, token) => {
     console.log("Storing token:", token);
     localStorage.setItem("token", token);
+    if (role) {
+      localStorage.setItem("userRole", role);
+    }
     setIsLoggedIn(true);
   };
 
   const handleLogout = () => {
     localStorage.removeItem("token");
+    localStorage.removeItem("userRole");
     setIsLoggedIn(false);
   };
 
   return (
-    <Router>
-      <Header isLoggedIn={isLoggedIn} onLogout={handleLogout} />
-      <Routes>
-        <Route
-          path="/"
-          element={isLoggedIn ? <HomePage /> : <Navigate to="/login" />}
-        />
-        <Route
-          path="/register"
-          element={isLoggedIn ? <RegisterPage /> : <Navigate to="/login" />}
-        />
-        <Route
-          path="/results"
-          element={isLoggedIn ? <ResultsPage /> : <Navigate to="/login" />}
-        />
-        <Route
-          path="/login"
-          element={isLoggedIn ? <Navigate to="/" /> : <LoginForm onLogin={handleLogin} />}
-        />
-        <Route path="*" element={<Navigate to={isLoggedIn ? "/" : "/login"} />} />
-      </Routes>
-    </Router>
+    <div className="App">
+      <Router>
+        {isLoggedIn && <Header isLoggedIn={isLoggedIn} onLogout={handleLogout} />}
+        <Routes>
+          <Route
+            path="/"
+            element={isLoggedIn ? <HomePage /> : <Navigate to="/login" />}
+          />
+          <Route
+            path="/register"
+            element={isLoggedIn ? <RegisterPage /> : <Navigate to="/login" />}
+          />
+          <Route
+            path="/results"
+            element={isLoggedIn ? <ResultsPage /> : <Navigate to="/login" />}
+          />
+          <Route
+            path="/login"
+            element={isLoggedIn ? <Navigate to="/" /> : <LoginForm onLogin={handleLogin} />}
+          />
+          <Route path="*" element={<Navigate to={isLoggedIn ? "/" : "/login"} />} />
+        </Routes>
+      </Router>
+    </div>
   );
 };
 

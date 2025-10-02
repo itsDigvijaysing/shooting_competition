@@ -26,32 +26,56 @@ const LoginForm = ({ onLogin }) => {
   };
 
   return (
-    <div className="login-container">
-      <h2>Login</h2>
-      <form onSubmit={handleSubmit}>
-        <label>
-          Username:
-          <input
-            type="text"
-            name="username"
-            value={formData.username}
-            onChange={handleChange}
-            required
-          />
-        </label>
-        <label>
-          Password:
-          <input
-            type="password"
-            name="password"
-            value={formData.password}
-            onChange={handleChange}
-            required
-          />
-        </label>
-        <button type="submit">Login</button>
-      </form>
-      {errorMessage && <p className="error-message">{errorMessage}</p>}
+    <div className="login-page">
+      <div className="login-container">
+        <div className="login-header">
+          <div className="shooting-icon">🎯</div>
+          <h2>Shooting Competition</h2>
+          <p>Management System</p>
+        </div>
+        
+        <form className="login-form" onSubmit={handleSubmit}>
+          <div className="form-group">
+            <label>Username</label>
+            <input
+              type="text"
+              name="username"
+              value={formData.username}
+              onChange={handleChange}
+              placeholder="Enter your username"
+              required
+            />
+          </div>
+          
+          <div className="form-group">
+            <label>Password</label>
+            <input
+              type="password"
+              name="password"
+              value={formData.password}
+              onChange={handleChange}
+              placeholder="Enter your password"
+              required
+            />
+          </div>
+          
+          <button type="submit" className="login-button">
+            Sign In
+          </button>
+        </form>
+        
+        {errorMessage && <div className="error-message">{errorMessage}</div>}
+        
+        <div className="demo-credentials">
+          <h4>Demo Credentials</h4>
+          <p><strong>Admin:</strong> username: admin, password: admin123</p>
+          <p><strong>User:</strong> username: user, password: user123</p>
+        </div>
+        
+        <div className="login-footer">
+          <p>Secure competition management platform</p>
+        </div>
+      </div>
     </div>
   );
 };

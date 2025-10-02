@@ -4,7 +4,13 @@ require('dotenv').config();
 
 
 const authenticateUser = (req, res, next) => {
-  const token = req.header('Authorization').replace('Bearer ', '');
+  const authHeader = req.header('Authorization');
+  
+  if (!authHeader) {
+    return res.status(401).send({ message: 'Access denied. No token provided.' });
+  }
+
+  const token = authHeader.replace('Bearer ', '');
 
   if (!token) {
     return res.status(401).send({ message: 'Access denied. No token provided.' });
@@ -42,11 +48,11 @@ const loginUser = (req, res) => {
     const user = results[0];
     const token = jwt.sign(
       { userId: user.id, role: user.role },
-      env.JWT_SECRET,
+      process.env.JWT_SECRET,
       { expiresIn: "1h" }
     );
 
-    res.status(200).send({ message: "Login successful", token });
+    res.status(200).send({ message: "Login successful", token, role: user.role });
   });
 };
 
@@ -58,7 +64,7 @@ const checkAuthentication = (req, res, next) => {
     return res.status(403).send({ message: 'No token provided' });
   }
 
-  jwt.verify(token, env.JWT_SECRET, (err, decoded) => {
+  jwt.verify(token, process.env.JWT_SECRET, (err, decoded) => {
     if (err) {
       return res.status(401).send({ message: 'Invalid token' });
     }
