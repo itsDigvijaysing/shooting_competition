@@ -18,31 +18,36 @@ const TimingSectionForm = ({ onAddSection }) => {
 
   return (
     <div>
-      <h2>Add Timing & Section</h2>
       <form onSubmit={handleSubmit}>
-        <label>
-          Section Name:
-          <input
-            type="text"
-            name="section"
-            value={sectionData.section}
-            onChange={handleChange}
-            placeholder="e.g., Detail 1"
-            required
-          />
-        </label>
-        <label>
-          Timing:
-          <input
-            type="text"
-            name="timing"
-            value={sectionData.timing}
-            onChange={handleChange}
-            placeholder="e.g., 3pm to 4pm"
-            required
-          />
-        </label>
-        <button type="submit">Add Section</button>
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px' }}>
+          <div className="form-group">
+            <label>Section Name</label>
+            <input
+              type="text"
+              name="section"
+              value={sectionData.section}
+              onChange={handleChange}
+              placeholder="e.g., Detail 1, Group A, Session 1"
+              required
+            />
+          </div>
+          
+          <div className="form-group">
+            <label>Timing Schedule</label>
+            <input
+              type="text"
+              name="timing"
+              value={sectionData.timing}
+              onChange={handleChange}
+              placeholder="e.g., 3:00 PM - 4:00 PM"
+              required
+            />
+          </div>
+        </div>
+        
+        <button type="submit">
+          <span>➕</span> Add Section
+        </button>
       </form>
     </div>
   );
