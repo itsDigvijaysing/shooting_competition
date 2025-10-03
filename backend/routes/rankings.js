@@ -20,8 +20,8 @@ router.get('/competition/:competitionId', async (req, res) => {
       page = 1 
     } = req.query;
     
-    const pageNum = parseInt(page);
-    const limitNum = parseInt(limit);
+    const pageNum = parseInt(page) || 1;
+    const limitNum = parseInt(limit) || 100;
     const offset = (pageNum - 1) * limitNum;
     
     // Check if competition exists
@@ -114,10 +114,10 @@ router.get('/competition/:competitionId', async (req, res) => {
       LEFT JOIN competitions c ON p.competition_id = c.id
       WHERE ${whereClause}
       ORDER BY rank_position
-      LIMIT ? OFFSET ?
+      LIMIT ${limitNum} OFFSET ${offset}
     `;
     
-    const [rankings] = await db.execute(dataQuery, [...params, limitNum, offset]);
+    const [rankings] = await db.execute(dataQuery, params);
     
     res.json({
       competition: competition[0],
