@@ -1,12 +1,17 @@
 // src/pages/HomePage.js
-import React from "react";
+import React, { useContext } from "react";
 import { Link } from "react-router-dom";
+import { CompetitionContext } from "../context/CompetitionContext";
+import CompetitionSelector from "../components/CompetitionSelector";
 
 const HomePage = () => {
   const userRole = localStorage.getItem("userRole");
+  const { selectedCompetition } = useContext(CompetitionContext);
   
   return (
     <div className="main-content">
+      <CompetitionSelector />
+      
       <div className="hero-section" style={{
         textAlign: 'center',
         padding: '60px 20px',
@@ -58,7 +63,7 @@ const HomePage = () => {
           <div style={{ fontSize: '48px', marginBottom: '20px' }}>🎯</div>
           <h3>Score Management</h3>
           <p>Enter and manage scores for multiple series. Automatic calculation of totals and rankings.</p>
-          <Link to="/register">
+          <Link to="/scores">
             <button style={{ marginTop: '15px' }}>
               Manage Scores
             </button>
@@ -124,8 +129,12 @@ const HomePage = () => {
           <h3>🔧 Admin Panel</h3>
           <p>You have administrator privileges. You can manage all aspects of the competition.</p>
           <div style={{ marginTop: '20px' }}>
-            <button style={{ marginRight: '10px' }}>Manage Users</button>
-            <button>Export Data</button>
+            <Link to="/admin">
+              <button style={{ marginRight: '10px' }}>Admin Dashboard</button>
+            </Link>
+            <Link to="/results">
+              <button>View Reports</button>
+            </Link>
           </div>
         </div>
       )}

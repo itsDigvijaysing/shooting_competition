@@ -1,9 +1,12 @@
-import React, { useState } from "react";
+import React, { useState, useContext } from "react";
+import { CompetitionContext } from "../context/CompetitionContext";
+import CompetitionSelector from "../components/CompetitionSelector";
 import ParticipantForm from "../components/ParticipantForm";
 import TimingSectionForm from "../components/TimingSectionForm";
 import ScoreEntry from "../components/ScoreEntry";
 
 const RegisterPage = () => {
+  const { selectedCompetition } = useContext(CompetitionContext);
   const [sections, setSections] = useState([]);
   const [activeTab, setActiveTab] = useState("register");
 
@@ -11,8 +14,31 @@ const RegisterPage = () => {
     setSections((prevSections) => [...prevSections, sectionData]);
   };
 
+  if (!selectedCompetition) {
+    return (
+      <div className="main-content">
+        <CompetitionSelector />
+        <div style={{ 
+          textAlign: 'center', 
+          padding: '60px 20px',
+          background: 'rgba(255, 255, 255, 0.95)',
+          backdropFilter: 'blur(20px)',
+          borderRadius: '20px',
+          border: '1px solid rgba(102, 126, 234, 0.2)',
+          margin: '20px 0'
+        }}>
+          <h2 style={{ color: '#a0aec0', margin: 0 }}>
+            Please select a competition to manage participants
+          </h2>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="main-content">
+      <CompetitionSelector compact />
+      
       <div style={{ textAlign: 'center', marginBottom: '40px' }}>
         <h1 style={{ 
           background: 'linear-gradient(135deg, #667eea, #764ba2)',
@@ -20,10 +46,10 @@ const RegisterPage = () => {
           WebkitTextFillColor: 'transparent',
           backgroundClip: 'text'
         }}>
-          🏆 Competition Management
+          🏆 Participant Management
         </h1>
         <p style={{ color: '#7f8c8d', fontSize: '1.1rem' }}>
-          Manage participants, scores, and competition timing
+          Register participants and manage competition details
         </p>
       </div>
       
