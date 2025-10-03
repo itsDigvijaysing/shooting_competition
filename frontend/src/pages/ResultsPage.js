@@ -2,7 +2,7 @@ import React, { useState, useEffect, useContext, useCallback } from "react";
 import { CompetitionContext } from "../context/CompetitionContext";
 import CompetitionSelector from "../components/CompetitionSelector";
 import { exportRankingsToCSV, exportParticipantsToCSV } from "../utils/exportUtils";
-import { getParticipantsByCompetition, getRankings } from "../services/api";
+import * as api from "../services/api";
 import "./ResultsPage.css";
 
 const ResultsPage = () => {
@@ -14,22 +14,56 @@ const ResultsPage = () => {
   const [filterEvent, setFilterEvent] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const [deleting, setDeleting] = useState(null);
+  
+  const userRole = localStorage.getItem("userRole");
+  const isAdmin = userRole === 'admin';
 
   const fetchResults = useCallback(async () => {
-    if (!selectedCompetition) return;
+    if (!selectedCompetition) {
+      console.log('=== RESULTS DEBUG: No competition selected ===');
+      return;
+    }
     
     try {
       setLoading(true);
+      console.log('Loading results for competition:', selectedCompetition.name);
       const [participantsResponse, rankingsResponse] = await Promise.all([
-        getParticipantsByCompetition(selectedCompetition.id),
-        getRankings(selectedCompetition.id)
+        api.getParticipantsByCompetition(selectedCompetition.id),
+        api.getRankings(selectedCompetition.id)
       ]);
       
-      setParticipants(participantsResponse.participants || []);
-      setRankings(rankingsResponse.rankings || []);
+      console.log('=== RAW API RESPONSES ===');
+      console.log('Participants response:', participantsResponse);
+      console.log('Participants response type:', typeof participantsResponse);
+      console.log('Participants response keys:', participantsResponse ? Object.keys(participantsResponse) : 'null');
+      
+      console.log('Rankings response:', rankingsResponse);
+      console.log('Rankings response type:', typeof rankingsResponse);
+      console.log('Rankings response keys:', rankingsResponse ? Object.keys(rankingsResponse) : 'null');
+      
+      // Try different data extraction patterns
+      const participantsData = participantsResponse?.participants || participantsResponse?.data || participantsResponse || [];
+      const rankingsData = rankingsResponse?.rankings || rankingsResponse?.data || rankingsResponse || [];
+      
+      console.log('=== EXTRACTED DATA ===');
+      console.log('Participants data:', participantsData);
+      console.log('Participants data length:', participantsData.length);
+      console.log('Rankings data:', rankingsData);
+      console.log('Rankings data length:', rankingsData.length);
+      
+      if (rankingsData.length > 0) {
+        console.log('Sample ranking item:', rankingsData[0]);
+        console.log('Sample ranking keys:', Object.keys(rankingsData[0]));
+      }
+      
+      setParticipants(participantsData);
+      setRankings(rankingsData);
       setError("");
     } catch (error) {
-      console.error("Error fetching results:", error);
+      console.error("=== RESULTS ERROR ===", error);
+      console.error("Error details:", error.message);
+      console.error("Error stack:", error.stack);
       setError("Error fetching results: " + error.message);
     } finally {
       setLoading(false);
@@ -41,15 +75,54 @@ const ResultsPage = () => {
   }, [fetchResults]);
 
   const filteredRankings = rankings.filter((ranking) => {
-    const matchesSearch = ranking.participant_name?.toLowerCase().includes(searchTerm.toLowerCase());
+    const participantName = ranking.participant_name || ranking.student_name || '';
+    const matchesSearch = participantName.toLowerCase().includes(searchTerm.toLowerCase());
     const matchesAge = filterAge ? ranking.age === parseInt(filterAge) : true;
     const matchesEvent = filterEvent ? ranking.event === filterEvent : true;
     return matchesSearch && matchesAge && matchesEvent;
   });
+  
+  console.log(`Results: ${filteredRankings.length}/${rankings.length} participants shown`);
 
   const getUniqueEvents = () => {
     const events = [...new Set(rankings.map(r => r.event).filter(Boolean))];
     return events;
+  };
+
+  const handleDeleteParticipant = async (participantId, participantName) => {
+    console.log('=== DELETE PARTICIPANT DEBUG ===');
+    console.log('Participant ID:', participantId);
+    console.log('Participant Name:', participantName);
+    console.log('User role:', userRole);
+    console.log('Is admin:', isAdmin);
+    
+    if (!window.confirm(`Are you sure you want to delete participant "${participantName}"? This action cannot be undone.`)) {
+      console.log('User cancelled deletion');
+      return;
+    }
+
+    try {
+      console.log('Starting deletion process...');
+      setDeleting(participantId);
+      
+      console.log('Calling deleteParticipant API...');
+      const deleteResult = await api.deleteParticipant(participantId);
+      console.log('Delete API result:', deleteResult);
+      
+      console.log('Refreshing results after deletion...');
+      await fetchResults();
+      
+      alert(`Participant "${participantName}" has been deleted successfully.`);
+      console.log('Deletion completed successfully');
+    } catch (error) {
+      console.error("=== DELETE ERROR ===", error);
+      console.error("Error details:", error.message);
+      console.error("Error response:", error.response);
+      setError("Failed to delete participant: " + error.message);
+    } finally {
+      setDeleting(null);
+      console.log('Delete process finished');
+    }
   };
 
   if (!selectedCompetition) {
@@ -173,36 +246,57 @@ const ResultsPage = () => {
               <th>Series Done</th>
               <th>Best Series</th>
               <th>Avg Score</th>
+              {isAdmin && <th>Actions</th>}
             </tr>
           </thead>
           <tbody>
             {filteredRankings.length > 0 ? (
-              filteredRankings.map((ranking) => (
-                <tr key={ranking.participant_id} className={ranking.rank <= 3 ? `rank-${ranking.rank}` : ''}>
+              filteredRankings.map((ranking, index) => (
+                <tr key={ranking.participant_id || ranking.id || index} className={(ranking.rank || ranking.rank_position) <= 3 ? `rank-${ranking.rank || ranking.rank_position}` : ''}>
                   <td className="rank-cell">
-                    {ranking.rank <= 3 && (
+                    {(ranking.rank || ranking.rank_position) <= 3 && (
                       <span className="medal">
-                        {ranking.rank === 1 ? '🥇' : ranking.rank === 2 ? '🥈' : '🥉'}
+                        {(ranking.rank || ranking.rank_position) === 1 ? '🥇' : (ranking.rank || ranking.rank_position) === 2 ? '🥈' : '🥉'}
                       </span>
                     )}
-                    {ranking.rank}
+                    {ranking.rank || ranking.rank_position || 'N/A'}
                   </td>
-                  <td className="name-cell">{ranking.participant_name || "N/A"}</td>
+                  <td className="name-cell">{ranking.participant_name || ranking.student_name || "N/A"}</td>
                   <td>{ranking.zone || "N/A"}</td>
                   <td>{ranking.event || "N/A"}</td>
                   <td>{ranking.school_name || "N/A"}</td>
                   <td>{ranking.age || "N/A"}</td>
                   <td>{ranking.gender || "N/A"}</td>
-                  <td>{ranking.lane_number || "N/A"}</td>
+                  <td>{ranking.lane_number || ranking.lane_no || "N/A"}</td>
                   <td className="score-cell">{ranking.total_score || 0}</td>
                   <td>{ranking.series_completed || 0}/4</td>
-                  <td>{ranking.best_series || 0}</td>
-                  <td>{ranking.avg_score ? ranking.avg_score.toFixed(1) : '0.0'}</td>
+                  <td>{ranking.best_series || ranking.last_series_score || 0}</td>
+                  <td>{ranking.avg_score ? ranking.avg_score.toFixed(1) : (ranking.total_score && ranking.total_score > 0 ? (ranking.total_score / 4).toFixed(1) : '0.0')}</td>
+                  {isAdmin && (
+                    <td>
+                      <button
+                        onClick={() => handleDeleteParticipant(ranking.participant_id || ranking.id, ranking.participant_name || ranking.student_name)}
+                        disabled={deleting === ranking.participant_id}
+                        className="delete-btn"
+                        style={{
+                          background: deleting === ranking.participant_id ? '#ccc' : '#e74c3c',
+                          color: 'white',
+                          border: 'none',
+                          padding: '6px 12px',
+                          borderRadius: '4px',
+                          cursor: deleting === ranking.participant_id ? 'not-allowed' : 'pointer',
+                          fontSize: '12px'
+                        }}
+                      >
+                        {deleting === ranking.participant_id ? '🗑️...' : '🗑️ Delete'}
+                      </button>
+                    </td>
+                  )}
                 </tr>
               ))
             ) : (
               <tr>
-                <td colSpan="12" className="no-data">No results found</td>
+                <td colSpan={isAdmin ? "13" : "12"} className="no-data">No results found</td>
               </tr>
             )}
           </tbody>
@@ -217,8 +311,8 @@ const ResultsPage = () => {
           <div className="top-performers">
             <h4>Top 3 Performers:</h4>
             {filteredRankings.slice(0, 3).map((ranking, index) => (
-              <p key={ranking.participant_id}>
-                {index + 1}. {ranking.participant_name} - {ranking.total_score} points
+              <p key={ranking.participant_id || ranking.id}>
+                {index + 1}. {ranking.participant_name || ranking.student_name} - {ranking.total_score} points
               </p>
             ))}
           </div>

@@ -25,75 +25,131 @@ const AnalyticsDashboard = () => {
   const loadAnalytics = async () => {
     try {
       setLoading(true);
+      console.log('=== ANALYTICS DEBUG: Starting loadAnalytics ===');
+      console.log('Selected competition:', selectedCompetition);
       
+      console.log('Making API calls...');
       const [
         competitionStats,
         participants,
-        rankings,
-        scores
+        rankings
       ] = await Promise.all([
-        api.get(`/competitions/${selectedCompetition.id}/statistics`),
-        api.get(`/participants/competition/${selectedCompetition.id}`),
-        api.get(`/rankings/competition/${selectedCompetition.id}`),
-        api.get(`/scores/competition/${selectedCompetition.id}/detailed`)
+        api.get(`/competitions/${selectedCompetition.id}/stats`).catch(err => {
+          console.error('Competition stats API error:', err);
+          return { data: {} };
+        }),
+        api.get(`/participants?competition_id=${selectedCompetition.id}`).catch(err => {
+          console.error('Participants API error:', err);
+          return { data: [] };
+        }),
+        api.get(`/rankings/competition/${selectedCompetition.id}`).catch(err => {
+          console.error('Rankings API error:', err);
+          return { data: [] };
+        })
       ]);
 
+      // Debug: Log API responses
+      console.log('Analytics API responses received');
+
       // Process overview statistics
+      console.log('=== PROCESSING OVERVIEW STATISTICS ===');
+      console.log('participants.data:', participants.data);
+      console.log('rankings.data:', rankings.data);
+      console.log('competitionStats.data:', competitionStats.data);
+      
+      // Extract arrays from nested response structures
+      const participantArray = participants.data?.participants || participants.data?.data || participants.data || [];
+      const rankingArray = rankings.data?.rankings || rankings.data?.data || rankings.data || [];
+      
+      console.log('Extracted participantArray length:', participantArray.length);
+      console.log('Extracted rankingArray length:', rankingArray.length);
+      
       const overview = {
-        totalParticipants: participants.data.length,
-        totalScoresEntered: scores.data.length,
-        completedSeries: scores.data.filter(s => s.total_score > 0).length,
-        averageScore: rankings.data.length > 0 
-          ? (rankings.data.reduce((sum, r) => sum + (r.total_score || 0), 0) / rankings.data.length).toFixed(1)
+        totalParticipants: participantArray.length || 0,
+        totalScoresEntered: rankingArray.filter(r => r && r.total_score > 0).length || 0,
+        completedSeries: rankingArray.filter(r => r && r.series_completed >= 4).length || 0,
+        averageScore: competitionStats.data && competitionStats.data.average_score 
+          ? parseFloat(competitionStats.data.average_score).toFixed(1)
           : '0.0',
-        highestScore: rankings.data.length > 0 
-          ? Math.max(...rankings.data.map(r => r.total_score || 0))
-          : 0,
-        completionRate: participants.data.length > 0 
-          ? ((rankings.data.filter(r => r.series_completed >= 4).length / participants.data.length) * 100).toFixed(1)
+        highestScore: competitionStats.data ? (competitionStats.data.highest_score || 0) : 0,
+        completionRate: participantArray.length > 0 
+          ? (rankingArray.filter(r => r && r.series_completed >= 4).length / participantArray.length * 100).toFixed(1)
           : '0.0'
       };
+      
+      console.log('Calculated overview:', overview);
 
-      // Process participant statistics
-      const eventCounts = participants.data.reduce((acc, p) => {
-        acc[p.event] = (acc[p.event] || 0) + 1;
+      // Process participant statistics with null checks
+      console.log('=== PROCESSING PARTICIPANT STATISTICS ===');
+      // Use already extracted arrays
+      const participantData = participantArray;
+      const rankingData = rankingArray;
+      
+      console.log('participantData array length:', participantData.length);
+      console.log('participantData sample:', participantData[0]);
+      console.log('rankingData array length:', rankingData.length);  
+      console.log('rankingData sample:', rankingData[0]);
+      
+      if (participantData.length === 0) {
+        console.log('No participant data - check participants API response structure');
+      }
+      if (rankingData.length === 0) {
+        console.log('No ranking data - check rankings API response structure');
+      }
+      
+      const eventCounts = participantData.reduce((acc, p) => {
+        console.log('Processing participant for event:', p);
+        if (p && p.event) {
+          acc[p.event] = (acc[p.event] || 0) + 1;
+        }
         return acc;
       }, {});
 
-      const genderCounts = participants.data.reduce((acc, p) => {
-        acc[p.gender] = (acc[p.gender] || 0) + 1;
+      const genderCounts = participantData.reduce((acc, p) => {
+        if (p && p.gender) {
+          acc[p.gender] = (acc[p.gender] || 0) + 1;
+        }
         return acc;
       }, {});
 
-      const ageCounts = participants.data.reduce((acc, p) => {
-        const ageGroup = p.age <= 15 ? 'Under 16' : p.age <= 18 ? '16-18' : p.age <= 21 ? '19-21' : 'Over 21';
-        acc[ageGroup] = (acc[ageGroup] || 0) + 1;
+      const ageCounts = participantData.reduce((acc, p) => {
+        if (p && p.age) {
+          const ageGroup = p.age <= 15 ? 'Under 16' : p.age <= 18 ? '16-18' : p.age <= 21 ? '19-21' : 'Over 21';
+          acc[ageGroup] = (acc[ageGroup] || 0) + 1;
+        }
         return acc;
       }, {});
 
-      // Process score statistics
-      const scoreDistribution = rankings.data.reduce((acc, r) => {
-        const scoreRange = r.total_score >= 360 ? '360+' : 
-                          r.total_score >= 300 ? '300-359' :
-                          r.total_score >= 240 ? '240-299' :
-                          r.total_score >= 180 ? '180-239' : 'Below 180';
-        acc[scoreRange] = (acc[scoreRange] || 0) + 1;
+      console.log('eventCounts:', eventCounts);
+      console.log('genderCounts:', genderCounts);
+      console.log('ageCounts:', ageCounts);
+
+      // Process score statistics with better null safety
+      const scoreDistribution = rankingData.reduce((acc, r) => {
+        if (r && typeof r.total_score === 'number' && r.total_score > 0) {
+          const scoreRange = r.total_score >= 360 ? '360+' : 
+                            r.total_score >= 300 ? '300-359' :
+                            r.total_score >= 240 ? '240-299' :
+                            r.total_score >= 180 ? '180-239' : 'Below 180';
+          acc[scoreRange] = (acc[scoreRange] || 0) + 1;
+        }
         return acc;
       }, {});
 
-      // Process performance metrics
-      const topPerformers = rankings.data.slice(0, 10);
-      const seriesCompletion = participants.data.map(p => {
-        const participantRanking = rankings.data.find(r => r.participant_id === p.id);
+      // Process performance metrics with null safety
+      const topPerformers = rankingData.slice(0, 10).filter(r => r && r.total_score);
+      const seriesCompletion = participantData.map(p => {
+        const participantRanking = rankingData.find(r => r && r.participant_id === p?.id);
         return {
-          name: p.name,
-          event: p.event,
-          seriesCompleted: participantRanking ? participantRanking.series_completed : 0,
-          totalScore: participantRanking ? participantRanking.total_score : 0
+          name: p?.name || p?.participant_name || p?.student_name || 'Unknown',
+          event: p?.event || 'N/A',
+          seriesCompleted: participantRanking ? (participantRanking.series_completed || 0) : 0,
+          totalScore: participantRanking ? (participantRanking.total_score || 0) : 0
         };
       });
 
-      setAnalytics({
+      console.log('=== SETTING FINAL ANALYTICS DATA ===');
+      const finalAnalytics = {
         overview,
         participantStats: {
           eventBreakdown: eventCounts,
@@ -103,7 +159,7 @@ const AnalyticsDashboard = () => {
         scoreStats: {
           distribution: scoreDistribution,
           averageByEvent: Object.keys(eventCounts).reduce((acc, event) => {
-            const eventRankings = rankings.data.filter(r => r.event === event);
+            const eventRankings = rankingData.filter(r => r && r.event === event && r.total_score > 0);
             acc[event] = eventRankings.length > 0 
               ? (eventRankings.reduce((sum, r) => sum + (r.total_score || 0), 0) / eventRankings.length).toFixed(1)
               : '0.0';
@@ -114,7 +170,10 @@ const AnalyticsDashboard = () => {
           topPerformers,
           seriesCompletion: seriesCompletion.sort((a, b) => b.seriesCompleted - a.seriesCompleted)
         }
-      });
+      };
+      
+      console.log('Final analytics object:', finalAnalytics);
+      setAnalytics(finalAnalytics);
     } catch (error) {
       console.error('Error loading analytics:', error);
     } finally {
@@ -133,33 +192,86 @@ const AnalyticsDashboard = () => {
     </div>
   );
 
-  const renderChart = (title, data, type = 'bar') => (
-    <div className="chart-container">
-      <h4>{title}</h4>
-      <div className="chart-content">
-        {Object.entries(data).map(([key, value]) => (
-          <div key={key} className="chart-item">
-            <div className="chart-label">{key}</div>
-            <div className="chart-bar-container">
-              <div 
-                className="chart-bar" 
-                style={{ 
-                  width: `${(value / Math.max(...Object.values(data))) * 100}%` 
-                }}
-              ></div>
-              <span className="chart-value">{value}</span>
-            </div>
+  const renderChart = (title, data, type = 'bar') => {
+    console.log(`=== RENDER CHART DEBUG: ${title} ===`);
+    console.log('Received data:', data);
+    console.log('Data type:', typeof data);
+    console.log('Data is null:', data === null);
+    console.log('Data is undefined:', data === undefined);
+    
+    // Add null check and provide fallback
+    if (!data || typeof data !== 'object' || Object.keys(data).length === 0) {
+      console.log(`No data available for chart: ${title}`);
+      return (
+        <div className="chart-container">
+          <h4>{title}</h4>
+          <div className="chart-content no-data">
+            <p>No data available</p>
           </div>
-        ))}
-      </div>
-    </div>
-  );
+        </div>
+      );
+    }
+
+    try {
+      console.log('Object.keys(data):', Object.keys(data));
+      console.log('Object.values(data):', Object.values(data));
+      console.log('Object.entries(data):', Object.entries(data));
+      
+      const maxValue = Math.max(...Object.values(data));
+      console.log('Max value:', maxValue);
+      
+      return (
+        <div className="chart-container">
+          <h4>{title}</h4>
+          <div className="chart-content">
+            {Object.entries(data).map(([key, value]) => (
+              <div key={key} className="chart-item">
+                <div className="chart-label">{key}</div>
+                <div className="chart-bar-container">
+                  <div 
+                    className="chart-bar" 
+                    style={{ 
+                      width: `${maxValue > 0 ? (value / maxValue) * 100 : 0}%` 
+                    }}
+                  ></div>
+                  <span className="chart-value">{value}</span>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      );
+    } catch (error) {
+      console.error(`Error rendering chart ${title}:`, error);
+      return (
+        <div className="chart-container">
+          <h4>{title}</h4>
+          <div className="chart-content error">
+            <p>Error rendering chart: {error.message}</p>
+          </div>
+        </div>
+      );
+    }
+  };
 
   if (!selectedCompetition) {
     return (
       <div className="analytics-placeholder">
         <h3>📊 Competition Analytics</h3>
         <p>Select a competition to view detailed analytics and insights</p>
+      </div>
+    );
+  }
+
+  // Check if we have data to display
+  const hasData = analytics.overview?.totalParticipants > 0;
+  
+  if (!loading && !hasData) {
+    return (
+      <div className="analytics-placeholder">
+        <h3>📊 Competition Analytics</h3>
+        <p>No data available for the selected competition: <strong>{selectedCompetition.name}</strong></p>
+        <p>Make sure participants are registered and scores have been entered.</p>
       </div>
     );
   }
@@ -244,8 +356,8 @@ const AnalyticsDashboard = () => {
       <div className="top-performers-section">
         <h3>🏆 Top Performers</h3>
         <div className="performers-grid">
-          {analytics.performanceMetrics.topPerformers.map((performer, index) => (
-            <div key={performer.participant_id} className={`performer-card rank-${index + 1}`}>
+          {analytics.performanceMetrics?.topPerformers?.map((performer, index) => (
+            <div key={performer.participant_id || index} className={`performer-card rank-${index + 1}`}>
               <div className="performer-rank">
                 {index < 3 ? ['🥇', '🥈', '🥉'][index] : `#${index + 1}`}
               </div>
@@ -255,7 +367,7 @@ const AnalyticsDashboard = () => {
                 <span className="performer-score">{performer.total_score} pts</span>
               </div>
             </div>
-          ))}
+          )) || <p>No top performers data available</p>}
         </div>
       </div>
 
@@ -263,7 +375,7 @@ const AnalyticsDashboard = () => {
       <div className="completion-section">
         <h3>📈 Series Completion Progress</h3>
         <div className="completion-list">
-          {analytics.performanceMetrics.seriesCompletion.slice(0, 20).map((participant, index) => (
+          {analytics.performanceMetrics?.seriesCompletion?.slice(0, 20).map((participant, index) => (
             <div key={index} className="completion-item">
               <div className="participant-info">
                 <span className="participant-name">{participant.name}</span>
@@ -284,7 +396,7 @@ const AnalyticsDashboard = () => {
                 {participant.totalScore} pts
               </div>
             </div>
-          ))}
+          )) || <p>No series completion data available</p>}
         </div>
       </div>
     </div>

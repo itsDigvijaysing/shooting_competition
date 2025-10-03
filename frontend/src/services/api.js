@@ -132,5 +132,15 @@ export const getRankings = async (competitionId, filters = {}) => {
   }
 };
 
+// Delete participant
+export const deleteParticipant = async (participantId) => {
+  try {
+    const response = await api.delete(`/participants/delete/${participantId}`);
+    return response.data;
+  } catch (error) {
+    throw new Error(error.response?.data?.error || "Failed to delete participant");
+  }
+};
+
 // Export default api instance
 export default api;

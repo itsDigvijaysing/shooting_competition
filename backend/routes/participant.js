@@ -148,8 +148,8 @@ router.get("/", async (req, res) => {
       limit = 20 
     } = req.query;
     
-    const pageNum = parseInt(page);
-    const limitNum = parseInt(limit);
+    const pageNum = parseInt(page) || 1;
+    const limitNum = parseInt(limit) || 20;
     const offset = (pageNum - 1) * limitNum;
     
     let whereClause = '1=1';
@@ -201,11 +201,11 @@ router.get("/", async (req, res) => {
       LEFT JOIN users u ON p.user_id = u.id
       WHERE ${whereClause}
       ORDER BY p.total_score DESC, p.ten_pointers DESC, p.first_series_score DESC, p.last_series_score DESC
-      LIMIT ? OFFSET ?
+      LIMIT ${limitNum} OFFSET ${offset}
     `;
     
     const [countResult] = await db.execute(countQuery, params);
-    const [participants] = await db.execute(dataQuery, [...params, limitNum, offset]);
+    const [participants] = await db.execute(dataQuery, params);
     
     res.json({
       participants,

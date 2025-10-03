@@ -39,11 +39,11 @@ router.get('/', async (req, res) => {
       WHERE ${whereClause}
       GROUP BY c.id
       ORDER BY c.created_at DESC
-      LIMIT ? OFFSET ?
+      LIMIT ${limitNum} OFFSET ${offset}
     `;
     
     const [countResult] = await db.execute(countQuery, params);
-    const [competitions] = await db.execute(dataQuery, [...params, limitNum, offset]);
+    const [competitions] = await db.execute(dataQuery, params);
     
     res.json({
       competitions,

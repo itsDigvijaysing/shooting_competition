@@ -20,7 +20,6 @@ const ScorePage = () => {
   useEffect(() => {
     if (selectedCompetition) {
       loadParticipants();
-      loadEvents();
     }
   }, [selectedCompetition]);
 
@@ -33,23 +32,27 @@ const ScorePage = () => {
   const loadParticipants = async () => {
     try {
       setLoading(true);
-      const response = await api.get(`/participants/competition/${selectedCompetition.id}`);
-      setParticipants(response.data);
+      console.log('Loading participants for competition:', selectedCompetition.id);
+      const response = await api.get(`/participants?competition_id=${selectedCompetition.id}`);
+      console.log('Participants response:', response);
+      
+      const participantsData = response.data.participants || response.data.data || response.data || [];
+      setParticipants(participantsData);
+      loadEvents(participantsData);
+      console.log('Loaded participants:', participantsData);
     } catch (error) {
       console.error('Error loading participants:', error);
-      alert('Failed to load participants');
+      alert('Failed to load participants: ' + error.message);
     } finally {
       setLoading(false);
     }
   };
 
-  const loadEvents = async () => {
-    try {
-      const response = await api.get('/participants/events');
-      setEvents(response.data);
-    } catch (error) {
-      console.error('Error loading events:', error);
-    }
+  const loadEvents = (participantsData) => {
+    // Extract unique events from participants data
+    const uniqueEvents = [...new Set(participantsData.map(p => p.event).filter(Boolean))];
+    setEvents(uniqueEvents);
+    console.log('Extracted events:', uniqueEvents);
   };
 
   const loadParticipantScores = async () => {
@@ -145,8 +148,10 @@ const ScorePage = () => {
   };
 
   const filteredParticipants = participants.filter(participant => {
-    const matchesSearch = participant.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         participant.phone.includes(searchTerm);
+    const participantName = participant.name || participant.student_name || '';
+    const participantPhone = participant.phone || '';
+    const matchesSearch = participantName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                         participantPhone.includes(searchTerm);
     const matchesEvent = !filterEvent || participant.event === filterEvent;
     return matchesSearch && matchesEvent;
   });
@@ -227,9 +232,9 @@ const ScorePage = () => {
                     onClick={() => setSelectedParticipant(participant)}
                   >
                     <div className="participant-info">
-                      <h4>{participant.name}</h4>
-                      <p>{participant.event} • Lane {participant.lane_number}</p>
-                      <span className="phone">{participant.phone}</span>
+                      <h4>{participant.name || participant.student_name}</h4>
+                      <p>{participant.event} • Lane {participant.lane_number || participant.lane_no}</p>
+                      <span className="phone">{participant.phone || 'No phone'}</span>
                     </div>
                     <div className="participant-score">
                       {scores[1] || scores[2] || scores[3] || scores[4] ? (
@@ -248,10 +253,10 @@ const ScorePage = () => {
           {selectedParticipant && (
             <div className="score-entry-panel">
               <div className="participant-header">
-                <h3>{selectedParticipant.name}</h3>
+                <h3>{selectedParticipant.name || selectedParticipant.student_name}</h3>
                 <div className="participant-details">
                   <span className="event-badge">{selectedParticipant.event}</span>
-                  <span className="lane-badge">Lane {selectedParticipant.lane_number}</span>
+                  <span className="lane-badge">Lane {selectedParticipant.lane_number || selectedParticipant.lane_no}</span>
                   <span className="total-badge">Total: {getGrandTotal().toFixed(1)}</span>
                 </div>
               </div>

@@ -51,7 +51,7 @@ const App = () => {
             />
             <Route
               path="/register"
-              element={isLoggedIn ? <RegisterPage /> : <Navigate to="/login" />}
+              element={isLoggedIn ? <AdminRoute><RegisterPage /></AdminRoute> : <Navigate to="/login" />}
             />
             <Route
               path="/results"

@@ -1,8 +1,10 @@
-import React, { useState, useEffect } from "react";
-import { getParticipants, saveSeriesScores, getSeriesScores } from "../services/api";
+import React, { useState, useEffect, useContext } from "react";
+import { getParticipantsByCompetition, saveSeriesScores, getSeriesScores } from "../services/api";
+import { CompetitionContext } from "../context/CompetitionContext";
 import "./ScoreEntry.css";
 
 const ScoreEntry = () => {
+  const { selectedCompetition } = useContext(CompetitionContext);
   const [participants, setParticipants] = useState([]);
   const [selectedParticipant, setSelectedParticipant] = useState("");
   const [scores, setScores] = useState([
@@ -16,17 +18,33 @@ const ScoreEntry = () => {
 
   useEffect(() => {
     const fetchParticipants = async () => {
+      if (!selectedCompetition) {
+        setParticipants([]);
+        setMessage("Please select a competition first");
+        return;
+      }
+
       try {
-        const data = await getParticipants();
-        setParticipants(data || []);
+        console.log('Fetching participants for competition:', selectedCompetition.id);
+        const response = await getParticipantsByCompetition(selectedCompetition.id);
+        console.log('Participants response:', response);
+        
+        const participantsData = response.participants || response.data || response || [];
+        setParticipants(participantsData);
+        setMessage("");
+        
+        if (participantsData.length === 0) {
+          setMessage("No participants found for this competition");
+        }
       } catch (error) {
         console.error("Error fetching participants:", error.message);
         setMessage("Error fetching participants: " + error.message);
+        setParticipants([]);
       }
     };
 
     fetchParticipants();
-  }, []);
+  }, [selectedCompetition]);
 
   const handleParticipantChange = async (e) => {
     const participantId = e.target.value;
@@ -111,9 +129,23 @@ const ScoreEntry = () => {
     return scores.reduce((total, score) => total + (score.ten_pointers || 0), 0);
   };
 
+  if (!selectedCompetition) {
+    return (
+      <div className="form-container">
+        <h2>🎯 Score Entry</h2>
+        <div className="message error">
+          Please select a competition first to enter scores.
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="form-container">
       <h2>🎯 Score Entry</h2>
+      <p style={{ color: '#666', marginBottom: '20px' }}>
+        Competition: <strong>{selectedCompetition.name}</strong>
+      </p>
       
       <form onSubmit={handleSubmit} className="score-form">
         <div className="participant-select">
@@ -128,7 +160,7 @@ const ScoreEntry = () => {
               <option value="">-- Select Participant --</option>
               {participants.map((participant) => (
                 <option key={participant.id} value={participant.id}>
-                  {participant.name} - Lane {participant.lane_no} ({participant.event})
+                  {participant.student_name || participant.name} - Lane {participant.lane_no || participant.lane_number} ({participant.event})
                 </option>
               ))}
             </select>

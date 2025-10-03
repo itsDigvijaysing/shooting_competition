@@ -28,13 +28,15 @@ const Header = ({ isLoggedIn, onLogout }) => {
                 Home
               </Link>
             </li>
-            {/* Participant Registration - Available to both admin and participants */}
-            <li>
-              <Link to="/register" className={isActive('/register')}>
-                <span className="nav-icon">📝</span>
-                {isAdmin ? 'Register Participant' : 'My Registration'}
-              </Link>
-            </li>
+            {/* Participant Registration - Admin only */}
+            {isAdmin && (
+              <li>
+                <Link to="/register" className={isActive('/register')}>
+                  <span className="nav-icon">📝</span>
+                  Register Participant
+                </Link>
+              </li>
+            )}
             {/* Score Entry - Admin only */}
             {isAdmin && (
               <li>

@@ -12,8 +12,8 @@ router.use(requireAdmin);
 router.get('/users', async (req, res) => {
   try {
     const { page = 1, limit = 20, role, status, search } = req.query;
-    const pageNum = parseInt(page);
-    const limitNum = parseInt(limit);
+    const pageNum = parseInt(page) || 1;
+    const limitNum = parseInt(limit) || 20;
     const offset = (pageNum - 1) * limitNum;
     
     let whereClause = '1=1';
@@ -42,11 +42,11 @@ router.get('/users', async (req, res) => {
       FROM users 
       WHERE ${whereClause} 
       ORDER BY created_at DESC 
-      LIMIT ? OFFSET ?
+      LIMIT ${limitNum} OFFSET ${offset}
     `;
     
     const [countResult] = await db.execute(countQuery, params);
-    const [users] = await db.execute(dataQuery, [...params, limitNum, offset]);
+    const [users] = await db.execute(dataQuery, params);
     
     res.json({
       users,
