@@ -1,83 +1,120 @@
-import React, { useState, useEffect } from "react";
-import { getParticipants } from "../services/api";
+import React, { useState, useEffect, useContext, useCallback } from "react";
+import { CompetitionContext } from "../context/CompetitionContext";
+import CompetitionSelector from "../components/CompetitionSelector";
+import { exportRankingsToCSV, exportParticipantsToCSV } from "../utils/exportUtils";
+import { getParticipantsByCompetition, getRankings } from "../services/api";
 import "./ResultsPage.css";
 
 const ResultsPage = () => {
+  const { selectedCompetition } = useContext(CompetitionContext);
   const [participants, setParticipants] = useState([]);
+  const [rankings, setRankings] = useState([]);
   const [searchTerm, setSearchTerm] = useState("");
   const [filterAge, setFilterAge] = useState("");
   const [filterEvent, setFilterEvent] = useState("");
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
+  const fetchResults = useCallback(async () => {
+    if (!selectedCompetition) return;
+    
+    try {
+      setLoading(true);
+      const [participantsResponse, rankingsResponse] = await Promise.all([
+        getParticipantsByCompetition(selectedCompetition.id),
+        getRankings(selectedCompetition.id)
+      ]);
+      
+      setParticipants(participantsResponse.participants || []);
+      setRankings(rankingsResponse.rankings || []);
+      setError("");
+    } catch (error) {
+      console.error("Error fetching results:", error);
+      setError("Error fetching results: " + error.message);
+    } finally {
+      setLoading(false);
+    }
+  }, [selectedCompetition]);
+
   useEffect(() => {
-    const fetchParticipants = async () => {
-      try {
-        setLoading(true);
-        const data = await getParticipants();
-        setParticipants(data || []);
-        setError("");
-      } catch (error) {
-        console.error("Error fetching participants:", error.message);
-        setError("Error fetching participants: " + error.message);
-      } finally {
-        setLoading(false);
-      }
-    };
+    fetchResults();
+  }, [fetchResults]);
 
-    fetchParticipants();
-  }, []);
-
-  const filteredParticipants = participants.filter((participant) => {
-    const matchesSearch = participant.name?.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesAge = filterAge ? participant.age === parseInt(filterAge) : true;
-    const matchesEvent = filterEvent ? participant.event === filterEvent : true;
+  const filteredRankings = rankings.filter((ranking) => {
+    const matchesSearch = ranking.participant_name?.toLowerCase().includes(searchTerm.toLowerCase());
+    const matchesAge = filterAge ? ranking.age === parseInt(filterAge) : true;
+    const matchesEvent = filterEvent ? ranking.event === filterEvent : true;
     return matchesSearch && matchesAge && matchesEvent;
   });
 
-  const calculateRankings = (participants) => {
-    const ranked = [...participants].sort((a, b) => {
-      // Primary: Total score (descending)
-      if ((b.total_score || 0) !== (a.total_score || 0)) {
-        return (b.total_score || 0) - (a.total_score || 0);
-      }
-      // Secondary: Ten pointers (descending)
-      if ((b.ten_pointers || 0) !== (a.ten_pointers || 0)) {
-        return (b.ten_pointers || 0) - (a.ten_pointers || 0);
-      }
-      // Tertiary: Last series score (descending)
-      if ((b.last_series_score || 0) !== (a.last_series_score || 0)) {
-        return (b.last_series_score || 0) - (a.last_series_score || 0);
-      }
-      // Quaternary: First series score (descending)
-      return (b.first_series_score || 0) - (a.first_series_score || 0);
-    });
-    
-    return ranked.map((participant, index) => ({
-      ...participant,
-      rank: index + 1
-    }));
-  };
-
   const getUniqueEvents = () => {
-    const events = [...new Set(participants.map(p => p.event).filter(Boolean))];
+    const events = [...new Set(rankings.map(r => r.event).filter(Boolean))];
     return events;
   };
 
+  if (!selectedCompetition) {
+    return (
+      <div className="main-content">
+        <CompetitionSelector />
+        <div style={{ 
+          textAlign: 'center', 
+          padding: '60px 20px',
+          background: 'rgba(255, 255, 255, 0.95)',
+          backdropFilter: 'blur(20px)',
+          borderRadius: '20px',
+          border: '1px solid rgba(102, 126, 234, 0.2)',
+          margin: '20px 0'
+        }}>
+          <h2 style={{ color: '#a0aec0', margin: 0 }}>
+            Please select a competition to view results
+          </h2>
+        </div>
+      </div>
+    );
+  }
+
   if (loading) {
-    return <div className="loading">Loading results...</div>;
+    return (
+      <div className="main-content">
+        <CompetitionSelector compact />
+        <div className="loading">Loading results...</div>
+      </div>
+    );
   }
 
   if (error) {
-    return <div className="error">{error}</div>;
+    return (
+      <div className="main-content">
+        <CompetitionSelector compact />
+        <div className="error">{error}</div>
+      </div>
+    );
   }
-
-  const rankedParticipants = calculateRankings(filteredParticipants);
 
   return (
     <div className="main-content">
+      <CompetitionSelector compact />
+      
       <div className="results-page">
-        <h1>🏆 Competition Results</h1>
+        <div className="results-header">
+          <h1>🏆 Competition Results</h1>
+          <div className="export-buttons">
+            <button 
+              onClick={() => exportRankingsToCSV(filteredRankings, selectedCompetition.name)}
+              className="export-btn rankings-export"
+              disabled={filteredRankings.length === 0}
+            >
+              📊 Export Rankings
+            </button>
+            <button 
+              onClick={() => exportParticipantsToCSV(participants, selectedCompetition.name)}
+              className="export-btn participants-export"
+              disabled={participants.length === 0}
+            >
+              👥 Export Participants
+            </button>
+          </div>
+        </div>
       
       <div className="filters">
         <div className="filter-group">
@@ -133,39 +170,39 @@ const ResultsPage = () => {
               <th>Gender</th>
               <th>Lane</th>
               <th>Total Score</th>
-              <th>Ten Pointers</th>
-              <th>First Series</th>
-              <th>Last Series</th>
+              <th>Series Done</th>
+              <th>Best Series</th>
+              <th>Avg Score</th>
             </tr>
           </thead>
           <tbody>
-            {rankedParticipants.length > 0 ? (
-              rankedParticipants.map((participant) => (
-                <tr key={participant.id} className={participant.rank <= 3 ? `rank-${participant.rank}` : ''}>
+            {filteredRankings.length > 0 ? (
+              filteredRankings.map((ranking) => (
+                <tr key={ranking.participant_id} className={ranking.rank <= 3 ? `rank-${ranking.rank}` : ''}>
                   <td className="rank-cell">
-                    {participant.rank <= 3 && (
+                    {ranking.rank <= 3 && (
                       <span className="medal">
-                        {participant.rank === 1 ? '🥇' : participant.rank === 2 ? '🥈' : '🥉'}
+                        {ranking.rank === 1 ? '🥇' : ranking.rank === 2 ? '🥈' : '🥉'}
                       </span>
                     )}
-                    {participant.rank}
+                    {ranking.rank}
                   </td>
-                  <td className="name-cell">{participant.name || "N/A"}</td>
-                  <td>{participant.zone || "N/A"}</td>
-                  <td>{participant.event || "N/A"}</td>
-                  <td>{participant.school_name || "N/A"}</td>
-                  <td>{participant.age || "N/A"}</td>
-                  <td>{participant.gender || "N/A"}</td>
-                  <td>{participant.lane_no || "N/A"}</td>
-                  <td className="score-cell">{participant.total_score || 0}</td>
-                  <td>{participant.ten_pointers || 0}</td>
-                  <td>{participant.first_series_score || 0}</td>
-                  <td>{participant.last_series_score || 0}</td>
+                  <td className="name-cell">{ranking.participant_name || "N/A"}</td>
+                  <td>{ranking.zone || "N/A"}</td>
+                  <td>{ranking.event || "N/A"}</td>
+                  <td>{ranking.school_name || "N/A"}</td>
+                  <td>{ranking.age || "N/A"}</td>
+                  <td>{ranking.gender || "N/A"}</td>
+                  <td>{ranking.lane_number || "N/A"}</td>
+                  <td className="score-cell">{ranking.total_score || 0}</td>
+                  <td>{ranking.series_completed || 0}/4</td>
+                  <td>{ranking.best_series || 0}</td>
+                  <td>{ranking.avg_score ? ranking.avg_score.toFixed(1) : '0.0'}</td>
                 </tr>
               ))
             ) : (
               <tr>
-                <td colSpan="12" className="no-data">No participants found</td>
+                <td colSpan="12" className="no-data">No results found</td>
               </tr>
             )}
           </tbody>
@@ -175,13 +212,13 @@ const ResultsPage = () => {
       <div className="results-summary">
         <h3>Competition Summary</h3>
         <p>Total Participants: {participants.length}</p>
-        <p>Showing Results: {rankedParticipants.length}</p>
-        {rankedParticipants.length > 0 && (
+        <p>Showing Results: {filteredRankings.length}</p>
+        {filteredRankings.length > 0 && (
           <div className="top-performers">
             <h4>Top 3 Performers:</h4>
-            {rankedParticipants.slice(0, 3).map((participant, index) => (
-              <p key={participant.id}>
-                {index + 1}. {participant.name} - {participant.total_score} points
+            {filteredRankings.slice(0, 3).map((ranking, index) => (
+              <p key={ranking.participant_id}>
+                {index + 1}. {ranking.participant_name} - {ranking.total_score} points
               </p>
             ))}
           </div>

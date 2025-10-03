@@ -5,6 +5,8 @@ import './Header.css';
 
 const Header = ({ isLoggedIn, onLogout }) => {
   const location = useLocation();
+  const userRole = localStorage.getItem("userRole");
+  const isAdmin = userRole === 'admin';
   
   const isActive = (path) => {
     return location.pathname === path ? 'active' : '';
@@ -26,22 +28,51 @@ const Header = ({ isLoggedIn, onLogout }) => {
                 Home
               </Link>
             </li>
+            {/* Participant Registration - Available to both admin and participants */}
             <li>
               <Link to="/register" className={isActive('/register')}>
                 <span className="nav-icon">📝</span>
-                Register
+                {isAdmin ? 'Register Participant' : 'My Registration'}
               </Link>
             </li>
+            {/* Score Entry - Admin only */}
+            {isAdmin && (
+              <li>
+                <Link to="/scores" className={isActive('/scores')}>
+                  <span className="nav-icon">🎯</span>
+                  Score Entry
+                </Link>
+              </li>
+            )}
+            {/* Results - Available to both */}
             <li>
               <Link to="/results" className={isActive('/results')}>
                 <span className="nav-icon">🏆</span>
                 Results
               </Link>
             </li>
+            {/* Analytics - Admin only */}
+            {isAdmin && (
+              <li>
+                <Link to="/analytics" className={isActive('/analytics')}>
+                  <span className="nav-icon">📊</span>
+                  Analytics
+                </Link>
+              </li>
+            )}
+            {/* Admin Panel - Admin only */}
+            {isAdmin && (
+              <li>
+                <Link to="/admin" className={isActive('/admin')}>
+                  <span className="nav-icon">⚙️</span>
+                  Admin Panel
+                </Link>
+              </li>
+            )}
             <li>
               <button onClick={onLogout} className="logout-button">
                 <span className="nav-icon">🚪</span>
-                Logout
+                Logout ({userRole})
               </button>
             </li>
           </ul>

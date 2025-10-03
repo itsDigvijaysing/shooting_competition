@@ -1,9 +1,15 @@
-import React, { useState } from "react";
-import { addParticipant } from "../services/api"; // Correct import
+import React, { useState, useContext } from "react";
+import { CompetitionContext } from "../context/CompetitionContext";
+import { addParticipant } from "../services/api";
 
 const ParticipantForm = () => {
+  const { selectedCompetition } = useContext(CompetitionContext);
+  const userRole = localStorage.getItem("userRole");
+  const isAdmin = userRole === 'admin';
+  
   const [formData, setFormData] = useState({
-    name: "",
+    student_name: "",
+    phone: "",
     zone: "",
     event: "AP",
     school_name: "",
@@ -20,11 +26,23 @@ const ParticipantForm = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    
+    if (!selectedCompetition) {
+      setMessage("Please select a competition first.");
+      return;
+    }
+    
     try {
-      const response = await addParticipant(formData);
-      setMessage(response.message);
+      const participantData = {
+        ...formData,
+        competition_id: selectedCompetition.id
+      };
+      
+      await addParticipant(participantData);
+      setMessage("Participant registered successfully!");
       setFormData({
-        name: "",
+        student_name: "",
+        phone: "",
         zone: "",
         event: "AP",
         school_name: "",
@@ -33,22 +51,40 @@ const ParticipantForm = () => {
         lane_no: "",
       });
     } catch (error) {
-      setMessage("Error in registration. Please try again.");
+      console.error('Registration error:', error);
+      setMessage(error.message || "Error in registration. Please try again.");
     }
   };
 
   return (
     <div className="form-container">
-      <h2>🎯 Register Participant</h2>
+      <h2>🎯 {isAdmin ? 'Register New Participant' : 'Register for Competition'}</h2>
+      {!isAdmin && (
+        <div className="info-message">
+          <p>ℹ️ As a participant, you can register yourself for competitions. Only one registration per competition is allowed.</p>
+        </div>
+      )}
       <form onSubmit={handleSubmit}>
         <div className="form-group">
           <label>Participant Name</label>
           <input 
             type="text" 
-            name="name" 
-            value={formData.name} 
+            name="student_name" 
+            value={formData.student_name} 
             onChange={handleChange} 
             placeholder="Enter participant's full name"
+            required 
+          />
+        </div>
+        
+        <div className="form-group">
+          <label>Phone Number</label>
+          <input 
+            type="tel" 
+            name="phone" 
+            value={formData.phone} 
+            onChange={handleChange} 
+            placeholder="Enter phone number"
             required 
           />
         </div>
@@ -69,10 +105,8 @@ const ParticipantForm = () => {
           <label>Event Category</label>
           <select name="event" value={formData.event} onChange={handleChange} required>
             <option value="AP">Air Pistol (AP)</option>
-            <option value="PS">Peep Site (PS)</option>
-            <option value="OS">Open Site (OS)</option>
-            <option value="10m">10m Air Rifle</option>
-            <option value="50m">50m Rifle</option>
+            <option value="PS">Precision Shooting (PS)</option>
+            <option value="OS">Olympic Shooting (OS)</option>
           </select>
         </div>
         

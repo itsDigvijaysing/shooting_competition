@@ -320,6 +320,44 @@ tr:hover {
   100% { transform: rotate(360deg); }
 }
 
+/* Touch-friendly enhancements for mobile */
+@media (max-width: 768px) {
+  /* Ensure touch targets are at least 44px */
+  button, input, select, .clickable {
+    min-height: 44px;
+    min-width: 44px;
+  }
+  
+  /* Improve table readability on mobile */
+  .table-container {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+  
+  table {
+    min-width: 600px;
+  }
+  
+  /* Stack form elements on mobile */
+  .form-group {
+    margin-bottom: 20px;
+  }
+  
+  /* Improve button spacing */
+  button {
+    margin: 5px;
+    width: auto;
+    min-width: 120px;
+  }
+  
+  /* Make cards more touch-friendly */
+  .card {
+    margin: 15px 0;
+    padding: 20px;
+    border-radius: 15px;
+  }
+}
+
 /* Responsive Design */
 @media (max-width: 768px) {
   .main-content {
@@ -336,17 +374,24 @@ tr:hover {
   
   input, select, textarea {
     padding: 12px 15px;
-    font-size: 16px;
+    font-size: 16px; /* Prevents zoom on iOS */
   }
   
   button {
-    padding: 12px 20px;
-    font-size: 14px;
+    padding: 14px 20px;
+    font-size: 16px;
+    touch-action: manipulation; /* Prevents double-tap zoom */
   }
   
   th, td {
-    padding: 10px 8px;
+    padding: 12px 10px;
     font-size: 14px;
+  }
+  
+  /* Improve grid layouts on mobile */
+  .grid-container {
+    grid-template-columns: 1fr !important;
+    gap: 15px;
   }
 }
 
@@ -363,4 +408,95 @@ tr:hover {
   
   h1 { font-size: 1.75rem; }
   h2 { font-size: 1.5rem; }
+  
+  /* Make forms single column on small screens */
+  .form-row {
+    flex-direction: column !important;
+  }
+  
+  .form-row .form-group {
+    width: 100% !important;
+    margin-right: 0 !important;
+  }
+  
+  /* Improve button layout */
+  .button-group {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  
+  .button-group button {
+    width: 100%;
+    margin: 5px 0;
+  }
+  
+  /* Stack navigation items */
+  .nav-horizontal {
+    flex-direction: column;
+  }
+  
+  /* Improve modal behavior on mobile */
+  .modal {
+    margin: 10px;
+    width: calc(100% - 20px);
+    max-height: calc(100vh - 20px);
+    overflow-y: auto;
+  }
+}
+
+/* Landscape orientation adjustments */
+@media screen and (max-height: 600px) and (orientation: landscape) {
+  .main-content {
+    padding: 10px;
+  }
+  
+  .form-container {
+    padding: 15px;
+  }
+  
+  h1 { font-size: 1.5rem; }
+  h2 { font-size: 1.25rem; }
+}
+
+/* High DPI display improvements */
+@media (-webkit-min-device-pixel-ratio: 2), (min-resolution: 192dpi) {
+  /* Ensure crisp borders on high DPI displays */
+  input, select, textarea, button, .card {
+    border-width: 0.5px;
+  }
+}
+
+/* Accessibility improvements */
+@media (prefers-reduced-motion: reduce) {
+  * {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+/* Dark mode support */
+@media (prefers-color-scheme: dark) {
+  .App {
+    background: linear-gradient(135deg, #1a1a1a 0%, #2d3748 100%);
+  }
+  
+  .form-container, .card, .table-container {
+    background: rgba(45, 55, 72, 0.95);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+  }
+  
+  input, select, textarea {
+    background-color: rgba(45, 55, 72, 0.8);
+    border-color: rgba(255, 255, 255, 0.2);
+    color: white;
+  }
+  
+  h1, h2, h3, h4, h5, h6, label {
+    color: #f7fafc;
+  }
+  
+  p {
+    color: #cbd5e0;
+  }
 }

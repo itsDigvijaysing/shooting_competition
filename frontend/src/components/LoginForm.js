@@ -69,7 +69,7 @@ const LoginForm = ({ onLogin }) => {
         <div className="demo-credentials">
           <h4>Demo Credentials</h4>
           <p><strong>Admin:</strong> username: admin, password: admin123</p>
-          <p><strong>User:</strong> username: user, password: user123</p>
+          <p><strong>Participant:</strong> username: participant1, password: user123</p>
         </div>
         
         <div className="login-footer">
