@@ -2,7 +2,10 @@
 
 # dependencies
 frontend/node_modules
+backend/.env
 backend/node_modules
+frontend/.env
+frontend/.env.local
 frontend/.pnp
 frontend/.pnp.js
 
